@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -21,6 +19,7 @@ namespace Experiments.Retry.Resource.Controllers
         [HttpGet]
         public ActionResult<String> Get(String text)
         {
+            //Try to get the retry header value
             var attempt = Request.Headers["X-Retry"];
 
             if (int.TryParse(attempt, out int attemptNo))
@@ -28,17 +27,18 @@ namespace Experiments.Retry.Resource.Controllers
                 _logger.LogWarning($"RETRY: {attemptNo}");
                 if (attemptNo < 3)
                 {
+                    //First or second retry
                     return NotFound();
                 }
                 else
                 {
+                    //Third retry
                     return Ok(new string(text.ToUpper().Reverse().ToArray()));
                 }
             }
-            return NotFound();
-           
-        }
 
- 
+            //Not a retry - initial call
+            return StatusCode(500);
+        }
     }
 }
